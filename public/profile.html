@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>個人資料中心</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f4f4f9; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>用戶個人資料中心</h2>
+        <div id="userInfo">載入中...</div>
+        <br>
+        <a href="index.html">返回首頁</a>
+    </div>
+
+    <script>
+        // 從網址列取得 id 參數 (例如 profile.html?id=1)
+        const urlParams = new URLSearchParams(window.location.search);
+        const id = urlParams.get('id') || 1;
+
+        async function loadProfile() {
+            const res = await fetch(`/api/user/${id}`);
+            const data = await res.json();
+            if (res.ok) {
+                document.getElementById('userInfo').innerHTML = `
+                    <p><b>用戶編號 ID:</b> ${data.id}</p>
+                    <p><b>帳號名稱:</b> ${data.username}</p>
+                    <p><b>使用者權限:</b> ${data.role}</p>
+                    <p style="color: red;"><b>機密資料:</b> ${data.secret}</p>
+                `;
+            } else {
+                document.getElementById('userInfo').innerText = "找不到該用戶資料";
+            }
+        }
+        loadProfile();
+    </script>
+</body>
+</html>
