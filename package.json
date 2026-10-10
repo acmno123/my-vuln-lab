@@ -1,8 +1,11 @@
-{
+ {
   "name": "vuln-lab",
   "version": "1.0.0",
+  "description": "Vulnerable Lab for Pentesting",
+  "main": "api/index.js",
   "dependencies": {
-    "express": "^4.18.2",
+    "express": "^4.18.2"
+  }
   },
   "keywords": [],
   "author": "",
