@@ -2,16 +2,100 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>HACKED</title>
+    <title>雲端資安滲透靶場 (Vercel Edition)</title>
     <style>
-        body { background-color: #000; color: #0f0; font-family: 'Courier New', Courier, monospace; text-align: center; padding-top: 100px; }
-        h1 { font-size: 50px; text-shadow: 0 0 10px #0f0; }
-        p { font-size: 20px; color: #ff3333; }
+        body { background-color: #0f172a; color: #f8fafc; font-family: 'Courier New', Courier, monospace; padding: 30px; max-width: 800px; margin: auto; }
+        h1 { color: #38bdf8; text-align: center; }
+        .card { background: #1e293b; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        input, button { padding: 8px; margin: 5px 0; background: #334155; border: 1px solid #475569; color: white; border-radius: 4px; }
+        button { background: #0284c7; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0ea5e9; }
+        .hacked { background: black !important; color: #0f0 !important; }
     </style>
 </head>
 <body>
-    <h1>[!] SYSTEM COMPROMISED [!]</h1>
-    <p>This website has been taken over by Security Researcher.</p>
-    <p>Notice: Server is still running, but your frontend belongs to us.</p>
+
+    <h1>🔒 雲端靶場：漏洞展示與利用</h1>
+
+    <!-- 1. SQLi / 邏輯繞過模擬 -->
+    <div class="card">
+        <h3>1. 登入繞過 (模擬 SQLi)</h3>
+        <input type="text" id="username" placeholder="輸入帳號 (例如 admin 或 ' OR 1=1)"><br>
+        <input type="password" id="password" placeholder="輸入密碼"><br>
+        <button onclick="login()">登入</button>
+        <p id="login-result"></p>
+    </div>
+
+    <!-- 2. IDOR 漏洞模擬 -->
+    <div class="card">
+        <h3>2. 用戶資料查詢 (模擬 IDOR)</h3>
+        <p>嘗試輸入不同的用戶 ID (例如 1, 2, 3) 來查看機密：</p>
+        <input type="number" id="userId" value="1">
+        <button onclick="getUser()">查詢</button>
+        <pre id="user-data" style="background:#090d16; padding:10px;"></pre>
+    </div>
+
+    <!-- 3. Stored XSS 留言板 -->
+    <div class="card">
+        <h3>3. 公開留言板 (Stored XSS 測試)</h3>
+        <input type="text" id="guestName" placeholder="您的名字"><br>
+        <textarea id="guestMsg" placeholder="寫點什麼吧... (支援 HTML/JS 注入)" rows="3" style="width:100%; background:#334155; color:white; border:1px solid #475569;"></textarea><br>
+        <button onclick="postMessage()">發表留言</button>
+        <div id="message-board" style="margin-top: 15px;"></div>
+    </div>
+
+    <script>
+        // 模擬資料庫
+        const db = {
+            users: {
+                1: { id: 1, username: 'alice', role: 'user', secret: "Alice的秘密：我喜歡看動畫。" },
+                2: { id: 2, username: 'bob', role: 'user', secret: "Bob的秘密：期末考作弊被抓過。" },
+                3: { id: 3, username: 'admin', role: 'admin', secret: "FLAG{vercel_pure_html_xss_idor_999}" }
+            }
+        };
+
+        // 登入邏輯
+        function login() {
+            let u = document.getElementById('username').value;
+            let res = document.getElementById('login-result');
+            if (u.includes("'") || u === "admin") {
+                res.innerHTML = "🎉 登入成功！歡迎管理者，取得最高權限。機密資料: " + db.users[3].secret;
+                res.style.color = "#4ade80";
+            } else if (db.users[1].username === u) {
+                res.innerHTML = "登入成功！一般用戶: " + db.users[1].secret;
+                res.style.color = "#38bdf8";
+            } else {
+                res.innerHTML = "❌ 帳號或密碼錯誤";
+                res.style.color = "#f87171";
+            }
+        }
+
+        // IDOR 查詢
+        function getUser() {
+            let id = document.getElementById('userId').value;
+            let box = document.getElementById('user-data');
+            if (db.users[id]) {
+                box.innerHTML = JSON.stringify(db.users[id], null, 2);
+            } else {
+                box.innerHTML = "Error: 找不到該用戶 ID";
+            }
+        }
+
+        // XSS 留言板 (故意不跳脫 HTML，模擬 Stored XSS)
+        function postMessage() {
+            let name = document.getElementById('guestName').value || "匿名";
+            let msg = document.getElementById('guestMsg').value;
+            let board = document.getElementById('message-board');
+            
+            let item = document.createElement('div');
+            item.style.borderBottom = "1px solid #334155";
+            item.style.padding = "5px 0";
+            // 漏洞點：直接使用 innerHTML 渲染使用者輸入，產生 Stored XSS
+            item.innerHTML = `<strong>${name}</strong>: ${msg}`;
+            board.prepend(item);
+            
+            document.getElementById('guestMsg').value = "";
+        }
+    </script>
 </body>
 </html>
