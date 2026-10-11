@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔥 my-vuln-lab - 雙向資安滲透與防禦靶場</title>
+    <title>🔥 my-vuln-lab - 完整整合資安滲透與防禦靶場</title>
     <style>
         body { background-color: #0f172a; color: #f8fafc; font-family: 'Courier New', Courier, monospace; padding: 20px; max-width: 900px; margin: auto; }
         h1 { color: #38bdf8; text-align: center; }
@@ -19,8 +19,8 @@
 </head>
 <body>
 
-    <h1>🔥 my-vuln-lab 雙向資安滲透與防禦實驗室</h1>
-    <p style="text-align: center; color: #94a3b8;">GitHub Pages 專用：同步 C2 投放檔案與安全防禦檢測</p>
+    <h1>🔥 my-vuln-lab 完整整合資安實驗室</h1>
+    <p style="text-align: center; color: #94a3b8;">GitHub Pages 專用：漏洞利用、WAF 防禦、C2 檔案同步與帳號狀態探測</p>
 
     <!-- 1. SQL 注入 / 登入繞過 -->
     <div class="card">
@@ -51,10 +51,10 @@
         <div id="messageBoard" style="margin-top: 15px; border-top: 1px dashed #475569; padding-top: 10px;"></div>
     </div>
 
-    <!-- 4. 來自 C2 伺服器的投放檔案與安全掃描 (新功能！) -->
+    <!-- 4. C2 投放檔案同步與安全防禦掃描 -->
     <div class="card">
         <h3>4. C2 投放檔案同步與安全防禦掃描 <span class="defense-badge">動態安全網閘</span></h3>
-        <p>從你的電腦 C2 伺服器同步檔案下來，並由靶場防禦模組自動檢測其安全性。</p>
+        <p>從你的電腦 C2 伺服器同步檔案，並由靶場防禦模組自動檢測其安全性。</p>
         <label><input type="checkbox" id="enableWAF_Scanner" checked> 啟用靶場安全檢測掃描器 (Scanner)</label><br><br>
         <button onclick="fetchC2Files()">🔄 同步 C2 投放檔案清單</button><br>
         <select id="c2FileList" style="width: 100%; margin: 10px 0;">
@@ -98,17 +98,17 @@
             } catch (e) {}
         }
 
-        reportToComputer("雙向靶場 my-vuln-lab 已上線並連線至 C2！");
+        reportToComputer("整合型靶場 my-vuln-lab 已上線！");
         // --------------------------------------------------
 
         const db = {
             users: {
                 1: { id: 1, username: 'alice', role: 'user', secret: "Alice的日記：今天天氣很好。" },
                 2: { id: 2, username: 'bob', role: 'user', secret: "Bob的秘密：我暗戀隔壁班的小美。" },
-                3: { id: 3, username: 'admin', role: 'admin', secret: "FLAG{github_pages_dual_c2_master_888}" }
+                3: { id: 3, username: 'admin', role: 'admin', secret: "FLAG{github_pages_integrated_c2_999}" }
             },
             posts: [
-                { id: 1, username: 'admin', content: '歡迎來到雙向資安防禦靶場！' }
+                { id: 1, username: 'admin', content: '歡迎來到完整整合資安防禦靶場！' }
             ]
         };
 
@@ -208,31 +208,27 @@
                 let dangerousSigs = ['eval(', 'child_process', 'rm -rf', 'webshell'];
 
                 if (useScanner) {
-                    // 1. 檢查副檔名
                     for (let ext of dangerousExts) {
                         if (fileName.endsWith(ext)) {
-                            let alertMsg = `[防禦攔截] C2 投放檔案副檔名危險: ${fileName}`;
-                            reportSecurityAlert(alertMsg);
-                            resultBox.innerHTML = `🚨 【靶場防禦攔截】C2 投放的檔案 (${fileName}) 包含高危險副檔名，已被安全網閘阻擋！`;
+                            reportSecurityAlert(`[防禦攔截] C2 投放檔案副檔名危險: ${fileName}`);
+                            resultBox.innerHTML = `🚨 【靶場防禦攔截】C2 投放的檔案 (${fileName}) 包含高危險副檔名！`;
                             return;
                         }
                     }
 
-                    // 2. 檢查內部特徵碼
                     let foundSig = dangerousSigs.find(sig => fileText.includes(sig));
                     if (foundSig) {
-                        let alertMsg = `[惡意隔離] C2 投放檔案發現特徵碼 (${foundSig}): ${fileName}`;
-                        reportSecurityAlert(alertMsg);
-                        resultBox.innerHTML = `🚨 【惡意檔案隔離】C2 投放檔案內容掃描發現威脅特徵 [${foundSig}]，已被安全網閘自動銷毀！`;
+                        reportSecurityAlert(`[惡意隔離] C2 投放檔案發現特徵碼 (${foundSig}): ${fileName}`);
+                        resultBox.innerHTML = `🚨 【惡意檔案隔離】C2 投放檔案內容發現威脅特徵 [${foundSig}]，已被自動銷毀！`;
                         return;
                     }
                 }
 
-                resultBox.innerHTML = `✅ 【安全通過】C2 投放檔案已通過靶場防禦掃描！\n檔案網址: ${fileUrl}\n內容預覽: ${fileText.substring(0, 100)}...`;
-                reportToComputer(`C2 投放檔案 ${fileName} 通過靶場安全掃描。`);
+                resultBox.innerHTML = `✅ 【安全通過】C2 投放檔案已通過靶場防禦掃描！\n網址: ${fileUrl}\n內容預覽: ${fileText.substring(0, 100)}...`;
+                reportToComputer(`C2 投放檔案 ${fileName} 通過安全掃描。`);
 
             } catch (e) {
-                resultBox.innerHTML = `❌ 抓取 C2 檔案失敗（可能受到 CORS 跨網域限制或伺服器未開）。`;
+                resultBox.innerHTML = `❌ 抓取 C2 檔案失敗。`;
             }
         }
 
