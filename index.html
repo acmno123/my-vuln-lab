@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔥 雲端資安滲透靶場 (GitHub Pages Edition)</title>
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; font-family: 'Courier New', Courier, monospace; padding: 20px; max-width: 900px; margin: auto; }
+        h1 { color: #38bdf8; text-align: center; }
+        .card { background: #1e293b; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); border: 1px solid #334155; }
+        input, textarea, button { padding: 8px; margin: 5px 0; background: #0f172a; border: 1px solid #475569; color: white; border-radius: 4px; font-family: monospace; }
+        textarea { width: 100%; box-sizing: border-box; }
+        button { background: #0284c7; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+        button:hover { background: #0ea5e9; }
+        pre { background: #090d16; padding: 10px; border-radius: 4px; overflow-x: auto; color: #34d399; }
+        .flag { color: #f43f5e; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h1>🔥 網路安全滲透測試靶場</h1>
+    <p style="text-align: center; color: #94a3b8;">專為 GitHub Pages 設計的純前端漏洞實驗室</p>
+
+    <!-- 1. SQL 注入 / 登入繞過 -->
+    <div class="card">
+        <h3>1. 登入繞過 (模擬 SQL Injection)</h3>
+        <p>提示：嘗試在帳號輸入 <span class="flag">' OR 1=1 --</span> 或直接輸入 <span class="flag">admin</span></p>
+        <input type="text" id="loginUser" placeholder="輸入帳號"><br>
+        <input type="password" id="loginPass" placeholder="輸入密碼"><br>
+        <button onclick="simulateLogin()">執行登入</button>
+        <pre id="loginResult">等待輸入...</pre>
+    </div>
+
+    <!-- 2. IDOR 越權訪問 -->
+    <div class="card">
+        <h3>2. 用戶資料查詢 (模擬 IDOR)</h3>
+        <p>提示：嘗試查詢不同的 ID（例如 1, 2, 3 看看會發生什麼事）</p>
+        <input type="number" id="userId" value="1" min="1" max="5">
+        <button onclick="simulateIDOR()">查詢資料</button>
+        <pre id="idorResult">等待查詢...</pre>
+    </div>
+
+    <!-- 3. Stored XSS 留言板 -->
+    <div class="card">
+        <h3>3. 公開留言板 (模擬 Stored XSS)</h3>
+        <p>提示：在內容中輸入 <span class="flag">&lt;script&gt;alert('XSS 攻擊成功！');&lt;/script&gt;</span></p>
+        <input type="text" id="guestName" placeholder="您的名字"><br>
+        <textarea id="guestMsg" rows="3" placeholder="寫點什麼吧..."></textarea><br>
+        <button onclick="postMessage()">發表留言</button>
+        <div id="messageBoard" style="margin-top: 15px; border-top: 1px dashed #475569; padding-top: 10px;"></div>
+    </div>
+
+    <!-- 4. RCE 終端機指令注入模擬 -->
+    <div class="card">
+        <h3>4. 系統 Ping 測試 (模擬 Command Injection)</h3>
+        <p>提示：嘗試輸入 <span class="flag">127.0.0.1 & whoami</span> 或 <span class="flag">127.0.0.1 && dir</span></p>
+        <input type="text" id="pingHost" value="127.0.0.1" style="width: 250px;">
+        <button onclick="simulateRCE()">執行 Ping</button>
+        <pre id="rceResult">等待執行...</pre>
+    </div>
+
+    <script>
+        // 模擬後端資料庫
+        const db = {
+            users: {
+                1: { id: 1, username: 'alice', role: 'user', secret: "Alice的日記：今天天氣很好。" },
+                2: { id: 2, username: 'bob', role: 'user', secret: "Bob的秘密：我暗戀隔壁班的小美。" },
+                3: { id: 3, username: 'admin', role: 'admin', secret: "FLAG{github_pages_xss_idor_master_777}" }
+            },
+            posts: [
+                { id: 1, username: 'admin', content: '歡迎來到 GitHub Pages 資安靶場！' }
+            ]
+        };
+
+        // 1. 模擬登入與 SQL 注入
+        function simulateLogin() {
+            let user = document.getElementById('loginUser').value;
+            let resultBox = document.getElementById('loginResult');
+            
+            if (user.includes("'") || user.toLowerCase() === "admin") {
+                resultBox.innerHTML = `🎉 【SQLi 成功觸發】身分驗證被繞過！\n歡迎管理者登入！\n機密 Flag: <span class="flag">${db.users[3].secret}</span>`;
+            } else if (user === 'alice') {
+                resultBox.innerHTML = `登入成功！一般用戶 alice。\n資料: ${db.users[1].secret}`;
+            } else {
+                resultBox.innerHTML = `❌ 登入失敗：帳號或密碼錯誤。`;
+            }
+        }
+
+        // 2. 模擬 IDOR
+        function simulateIDOR() {
+            let id = document.getElementById('userId').value;
+            let resultBox = document.getElementById('idorResult');
+            
+            if (db.users[id]) {
+                resultBox.innerHTML = JSON.stringify(db.users[id], null, 2);
+                if (id == '3') {
+                    resultBox.innerHTML += `\n\n🔥 【IDOR 警告】你成功越權存取了管理者的機密資料！`;
+                }
+            } else {
+                resultBox.innerHTML = `Error: 找不到 ID 為 ${id} 的用戶。`;
+            }
+        }
+
+        // 3. 渲染與新增留言 (Stored XSS)
+        function renderPosts() {
+            let board = document.getElementById('messageBoard');
+            board.innerHTML = "<h4>留言列表：</h4>";
+            db.posts.forEach(p => {
+                let item = document.createElement('div');
+                item.style.background = "#0f172a";
+                item.style.padding = "8px";
+                item.style.margin = "5px 0";
+                item.style.borderRadius = "4px";
+                
+                // 故意使用 innerHTML 模擬 Stored XSS 漏洞
+                item.innerHTML = `<strong>${p.username}</strong>: ${p.content}`;
+                board.appendChild(item);
+            });
+        }
+
+        function postMessage() {
+            let name = document.getElementById('guestName').value || "訪客";
+            let content = document.getElementById('guestMsg').value;
+            
+            if (!content) return;
+
+            db.posts.push({
+                id: db.posts.length + 1,
+                username: name,
+                content: content
+            });
+
+            document.getElementById('guestMsg').value = "";
+            renderPosts();
+        }
+
+        // 4. 模擬 RCE 指令注入
+        function simulateRCE() {
+            let host = document.getElementById('pingHost').value;
+            let resultBox = document.getElementById('rceResult');
+            
+            if (host.includes("&") || host.includes("|") || host.includes(";")) {
+                resultBox.innerHTML = `PING ${host}...\n[SYSTEM EXECUTION OUTPUT]:\nuid=1001(web_user) gid=1001(web_user) groups=1001(web_user)\n🔥 【RCE 成功】指令注入生效！你已成功執行了系統命令！`;
+            } else {
+                resultBox.innerHTML = `PING ${host} (127.0.0.1) 56(84) bytes of data.\n64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.041 ms\n--- ${host} ping statistics ---\n1 packets transmitted, 1 received, 0% packet loss, time 0ms`;
+            }
+        }
+
+        // 初始化載入留言板
+        renderPosts();
+    </script>
+</body>
+</html>
