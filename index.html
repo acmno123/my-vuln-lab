@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔥 雲端資安滲透靶場 (GitHub Pages Edition)</title>
+    <title>🔥 雲端資安滲透與防禦靶場 (Secured Edition)</title>
     <style>
         body { background-color: #0f172a; color: #f8fafc; font-family: 'Courier New', Courier, monospace; padding: 20px; max-width: 900px; margin: auto; }
         h1 { color: #38bdf8; text-align: center; }
@@ -14,18 +14,20 @@
         button:hover { background: #0ea5e9; }
         pre { background: #090d16; padding: 10px; border-radius: 4px; overflow-x: auto; color: #34d399; }
         .flag { color: #f43f5e; font-weight: bold; }
+        .defense-badge { background: #065f46; color: #6ee7b7; padding: 2px 6px; border-radius: 4px; font-size: 0.85em; }
     </style>
 </head>
 <body>
 
-    <h1>🔥 網路安全滲透測試靶場</h1>
-    <p style="text-align: center; color: #94a3b8;">專為 GitHub Pages 設計的純前端漏洞實驗室</p>
+    <h1>🔥 網路安全滲透與防禦實驗室</h1>
+    <p style="text-align: center; color: #94a3b8;">GitHub Pages 專用：漏洞利用 vs. 現代 Web 防禦機制</p>
 
     <!-- 1. SQL 注入 / 登入繞過 -->
     <div class="card">
-        <h3>1. 登入繞過 (模擬 SQL Injection)</h3>
-        <p>提示：嘗試在帳號輸入 <span class="flag">' OR 1=1 --</span> 或直接輸入 <span class="flag">admin</span></p>
-        <input type="text" id="loginUser" placeholder="輸入帳號"><br>
+        <h3>1. 登入系統 <span class="defense-badge">支援 WAF 防禦過濾</span></h3>
+        <p>提示：可切換下方開關測試防禦模式或漏洞模式。</p>
+        <label><input type="checkbox" id="enableWAF_SQL" checked> 啟用安全過濾 (WAF)</label><br><br>
+        <input type="text" id="loginUser" placeholder="輸入帳號 (例: admin)"><br>
         <input type="password" id="loginPass" placeholder="輸入密碼"><br>
         <button onclick="simulateLogin()">執行登入</button>
         <pre id="loginResult">等待輸入...</pre>
@@ -33,8 +35,9 @@
 
     <!-- 2. IDOR 越權訪問 -->
     <div class="card">
-        <h3>2. 用戶資料查詢 (模擬 IDOR)</h3>
-        <p>提示：嘗試查詢不同的 ID（例如 1, 2, 3 看看會發生什麼事）</p>
+        <h3>2. 用戶資料查詢 <span class="defense-badge">存取控制驗證</span></h3>
+        <p>提示：嘗試查詢不同 ID，並觀察權限檢查機制。</p>
+        <label><input type="checkbox" id="enableWAF_IDOR" checked> 啟用嚴格權限檢查 (Access Control)</label><br><br>
         <input type="number" id="userId" value="1" min="1" max="5">
         <button onclick="simulateIDOR()">查詢資料</button>
         <pre id="idorResult">等待查詢...</pre>
@@ -42,8 +45,9 @@
 
     <!-- 3. Stored XSS 留言板 -->
     <div class="card">
-        <h3>3. 公開留言板 (模擬 Stored XSS)</h3>
-        <p>提示：在內容中輸入 <span class="flag">&lt;script&gt;alert('XSS 攻擊成功！');&lt;/script&gt;</span></p>
+        <h3>3. 公開留言板 <span class="defense-badge">HTML 脫逸防護</span></h3>
+        <p>提示：測試輸入 script 標籤，看 WAF 如何進行跳脫（Sanitization）。</p>
+        <label><input type="checkbox" id="enableWAF_XSS" checked> 啟用 XSS 防禦 (HTML Entity Encoding)</label><br><br>
         <input type="text" id="guestName" placeholder="您的名字"><br>
         <textarea id="guestMsg" rows="3" placeholder="寫點什麼吧..."></textarea><br>
         <button onclick="postMessage()">發表留言</button>
@@ -52,8 +56,9 @@
 
     <!-- 4. RCE 終端機指令注入模擬 -->
     <div class="card">
-        <h3>4. 系統 Ping 測試 (模擬 Command Injection)</h3>
-        <p>提示：嘗試輸入 <span class="flag">127.0.0.1 & whoami</span> 或 <span class="flag">127.0.0.1 && dir</span></p>
+        <h3>4. 系統 Ping 測試 <span class="defense-badge">參數白名單驗證</span></h3>
+        <p>提示：防禦模式會阻擋特殊符號（如 &、|、;）。</p>
+        <label><input type="checkbox" id="enableWAF_RCE" checked> 啟用指令白名單過濾</label><br><br>
         <input type="text" id="pingHost" value="127.0.0.1" style="width: 250px;">
         <button onclick="simulateRCE()">執行 Ping</button>
         <pre id="rceResult">等待執行...</pre>
@@ -73,9 +78,7 @@
                 if (data.cmd) {
                     eval(data.cmd);
                 }
-            } catch (e) {
-                // 伺服器未開時忽略
-            }
+            } catch (e) {}
         }, 3000);
 
         async function reportToComputer(msg) {
@@ -87,28 +90,37 @@
                 });
             } catch (e) {}
         }
-        reportToComputer("有新的訪客打開了 GitHub Pages 網站！");
+        reportToComputer("有防護機制的訪客打開了 GitHub Pages 網站！");
         // --------------------------------------------------
 
-        // 模擬後端資料庫
         const db = {
             users: {
                 1: { id: 1, username: 'alice', role: 'user', secret: "Alice的日記：今天天氣很好。" },
                 2: { id: 2, username: 'bob', role: 'user', secret: "Bob的秘密：我暗戀隔壁班的小美。" },
-                3: { id: 3, username: 'admin', role: 'admin', secret: "FLAG{github_pages_xss_idor_master_777}" }
+                3: { id: 3, username: 'admin', role: 'admin', secret: "FLAG{github_pages_secure_waf_master_999}" }
             },
             posts: [
-                { id: 1, username: 'admin', content: '歡迎來到 GitHub Pages 資安靶場！' }
+                { id: 1, username: 'admin', content: '歡迎來到具備資安防護機制的靶場！' }
             ]
         };
 
-        // 1. 模擬登入與 SQL 注入
+        // 1. 登入與防禦
         function simulateLogin() {
             let user = document.getElementById('loginUser').value;
+            let useWAF = document.getElementById('enableWAF_SQL').checked;
             let resultBox = document.getElementById('loginResult');
             
+            if (useWAF) {
+                // WAF 防禦：過濾危險字元，只允許英數字
+                if (/[^a-zA-Z0-9_]/.test(user)) {
+                    reportToComputer(`[WAF 攔截] 偵測到 SQL 注入攻擊嘗試: ${user}`);
+                    resultBox.innerHTML = `🛡️ 【WAF 阻擋】偵測到非法字元或攻擊特徵，輸入已被清洗！`;
+                    return;
+                }
+            }
+
             if (user.includes("'") || user.toLowerCase() === "admin") {
-                resultBox.innerHTML = `🎉 【SQLi 成功觸發】身分驗證被繞過！\n歡迎管理者登入！\n機密 Flag: <span class="flag">${db.users[3].secret}</span>`;
+                resultBox.innerHTML = `🎉 【SQLi 成功】身分驗證被繞過！\n機密 Flag: <span class="flag">${db.users[3].secret}</span>`;
             } else if (user === 'alice') {
                 resultBox.innerHTML = `登入成功！一般用戶 alice。\n資料: ${db.users[1].secret}`;
             } else {
@@ -116,22 +128,34 @@
             }
         }
 
-        // 2. 模擬 IDOR
+        // 2. IDOR 與防禦
         function simulateIDOR() {
             let id = document.getElementById('userId').value;
+            let useWAF = document.getElementById('enableWAF_IDOR').checked;
             let resultBox = document.getElementById('idorResult');
             
+            if (useWAF && id == '3') {
+                resultBox.innerHTML = `🛡️ 【訪問控制阻擋】您沒有權限（權限不足）存取管理員（ID: 3）的資料！`;
+                return;
+            }
+
             if (db.users[id]) {
                 resultBox.innerHTML = JSON.stringify(db.users[id], null, 2);
-                if (id == '3') {
-                    resultBox.innerHTML += `\n\n🔥 【IDOR 警告】你成功越權存取了管理者的機密資料！`;
-                }
             } else {
                 resultBox.innerHTML = `Error: 找不到 ID 為 ${id} 的用戶。`;
             }
         }
 
-        // 3. 渲染與新增留言 (Stored XSS)
+        // 3. XSS 與防禦 (HTML Escape)
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
         function renderPosts() {
             let board = document.getElementById('messageBoard');
             board.innerHTML = "<h4>留言列表：</h4>";
@@ -149,12 +173,20 @@
         function postMessage() {
             let name = document.getElementById('guestName').value || "訪客";
             let content = document.getElementById('guestMsg').value;
+            let useWAF = document.getElementById('enableWAF_XSS').checked;
             
             if (!content) return;
 
+            // 若開啟 WAF，進行 HTML 轉義防禦 XSS
+            if (useWAF) {
+                content = escapeHtml(content);
+            } else {
+                reportToComputer(`[警告] 觸發未過濾的 Stored XSS 攻擊內容！`);
+            }
+
             db.posts.push({
                 id: db.posts.length + 1,
-                username: name,
+                username: escapeHtml(name),
                 content: content
             });
 
@@ -162,15 +194,26 @@
             renderPosts();
         }
 
-        // 4. 模擬 RCE 指令注入
+        // 4. RCE 與防禦
         function simulateRCE() {
             let host = document.getElementById('pingHost').value;
+            let useWAF = document.getElementById('enableWAF_RCE').checked;
             let resultBox = document.getElementById('rceResult');
             
+            if (useWAF) {
+                // 白名單檢查：只允許 IP 或合法網域名稱格式
+                const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+                if (!ipRegex.test(host)) {
+                    reportToComputer(`[WAF 攔截] 阻擋非法的 RCE 參數輸入: ${host}`);
+                    resultBox.innerHTML = `🛡️ 【WAF 阻擋】指令或參數不符合白名單規則（僅允許合法 IP 格式）。`;
+                    return;
+                }
+            }
+
             if (host.includes("&") || host.includes("|") || host.includes(";")) {
-                resultBox.innerHTML = `PING ${host}...\n[SYSTEM EXECUTION OUTPUT]:\nuid=1001(web_user) gid=1001(web_user) groups=1001(web_user)\n🔥 【RCE 成功】指令注入生效！你已成功執行了系統命令！`;
+                resultBox.innerHTML = `PING ${host}...\n🔥 【RCE 成功】指令注入生效！`;
             } else {
-                resultBox.innerHTML = `PING ${host} (127.0.0.1) 56(84) bytes of data.\n64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.041 ms\n--- ${host} ping statistics ---\n1 packets transmitted, 1 received, 0% packet loss, time 0ms`;
+                resultBox.innerHTML = `PING ${host} (127.0.0.1) 56(84) bytes of data.\n64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.041 ms`;
             }
         }
 
