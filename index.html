@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔥 雲端資安滲透與防禦靶場 (Secured Edition)</title>
+    <title>🔥 my-vuln-lab - 雲端資安滲透與防禦靶場</title>
     <style>
         body { background-color: #0f172a; color: #f8fafc; font-family: 'Courier New', Courier, monospace; padding: 20px; max-width: 900px; margin: auto; }
         h1 { color: #38bdf8; text-align: center; }
@@ -19,13 +19,12 @@
 </head>
 <body>
 
-    <h1>🔥 網路安全滲透與防禦實驗室</h1>
-    <p style="text-align: center; color: #94a3b8;">GitHub Pages 專用：漏洞利用 vs. 現代 Web 防禦機制</p>
+    <h1>🔥 my-vuln-lab 網路安全滲透與防禦實驗室</h1>
+    <p style="text-align: center; color: #94a3b8;">GitHub Pages 專用靶場：漏洞利用 vs. 檔案安全防禦檢測</p>
 
     <!-- 1. SQL 注入 / 登入繞過 -->
     <div class="card">
         <h3>1. 登入系統 <span class="defense-badge">支援 WAF 防禦過濾</span></h3>
-        <p>提示：可切換下方開關測試防禦模式或漏洞模式。</p>
         <label><input type="checkbox" id="enableWAF_SQL" checked> 啟用安全過濾 (WAF)</label><br><br>
         <input type="text" id="loginUser" placeholder="輸入帳號 (例: admin)"><br>
         <input type="password" id="loginPass" placeholder="輸入密碼"><br>
@@ -36,7 +35,6 @@
     <!-- 2. IDOR 越權訪問 -->
     <div class="card">
         <h3>2. 用戶資料查詢 <span class="defense-badge">存取控制驗證</span></h3>
-        <p>提示：嘗試查詢不同 ID，並觀察權限檢查機制。</p>
         <label><input type="checkbox" id="enableWAF_IDOR" checked> 啟用嚴格權限檢查 (Access Control)</label><br><br>
         <input type="number" id="userId" value="1" min="1" max="5">
         <button onclick="simulateIDOR()">查詢資料</button>
@@ -46,7 +44,6 @@
     <!-- 3. Stored XSS 留言板 -->
     <div class="card">
         <h3>3. 公開留言板 <span class="defense-badge">HTML 脫逸防護</span></h3>
-        <p>提示：測試輸入 script 標籤，看 WAF 如何進行跳脫（Sanitization）。</p>
         <label><input type="checkbox" id="enableWAF_XSS" checked> 啟用 XSS 防禦 (HTML Entity Encoding)</label><br><br>
         <input type="text" id="guestName" placeholder="您的名字"><br>
         <textarea id="guestMsg" rows="3" placeholder="寫點什麼吧..."></textarea><br>
@@ -57,11 +54,20 @@
     <!-- 4. RCE 終端機指令注入模擬 -->
     <div class="card">
         <h3>4. 系統 Ping 測試 <span class="defense-badge">參數白名單驗證</span></h3>
-        <p>提示：防禦模式會阻擋特殊符號（如 &、|、;）。</p>
         <label><input type="checkbox" id="enableWAF_RCE" checked> 啟用指令白名單過濾</label><br><br>
         <input type="text" id="pingHost" value="127.0.0.1" style="width: 250px;">
         <button onclick="simulateRCE()">執行 Ping</button>
         <pre id="rceResult">等待執行...</pre>
+    </div>
+
+    <!-- 5. 檔案上傳與危險檢測模擬 (新加入！) -->
+    <div class="card">
+        <h3>5. 檔案上傳與惡意特徵檢測 <span class="defense-badge">檔案防禦機制</span></h3>
+        <p>提示：嘗試上傳不同類型的檔案，測試系統如何阻擋高危副檔名（如 .exe, .php）或掃描惡意特徵碼。</p>
+        <label><input type="checkbox" id="enableWAF_Upload" checked> 啟用嚴格檔案安全檢測 (Scanner)</label><br><br>
+        <input type="file" id="uploadFile"><br>
+        <button onclick="simulateFileUpload()">上傳並進行安全掃描</button>
+        <pre id="uploadResult">等待上傳...</pre>
     </div>
 
     <script>
@@ -90,7 +96,7 @@
                 });
             } catch (e) {}
         }
-        reportToComputer("有防護機制的訪客打開了 GitHub Pages 網站！");
+        reportToComputer("訪客已開啟 my-vuln-lab 靶場網頁！");
         // --------------------------------------------------
 
         const db = {
@@ -100,7 +106,7 @@
                 3: { id: 3, username: 'admin', role: 'admin', secret: "FLAG{github_pages_secure_waf_master_999}" }
             },
             posts: [
-                { id: 1, username: 'admin', content: '歡迎來到具備資安防護機制的靶場！' }
+                { id: 1, username: 'admin', content: '歡迎來到 my-vuln-lab 雲端資安靶場！' }
             ]
         };
 
@@ -110,13 +116,10 @@
             let useWAF = document.getElementById('enableWAF_SQL').checked;
             let resultBox = document.getElementById('loginResult');
             
-            if (useWAF) {
-                // WAF 防禦：過濾危險字元，只允許英數字
-                if (/[^a-zA-Z0-9_]/.test(user)) {
-                    reportToComputer(`[WAF 攔截] 偵測到 SQL 注入攻擊嘗試: ${user}`);
-                    resultBox.innerHTML = `🛡️ 【WAF 阻擋】偵測到非法字元或攻擊特徵，輸入已被清洗！`;
-                    return;
-                }
+            if (useWAF && /[^a-zA-Z0-9_]/.test(user)) {
+                reportToComputer(`[WAF 攔截] 偵測到 SQLi 嘗試: ${user}`);
+                resultBox.innerHTML = `🛡️ 【WAF 阻擋】偵測到非法字元，輸入已被清洗！`;
+                return;
             }
 
             if (user.includes("'") || user.toLowerCase() === "admin") {
@@ -135,7 +138,7 @@
             let resultBox = document.getElementById('idorResult');
             
             if (useWAF && id == '3') {
-                resultBox.innerHTML = `🛡️ 【訪問控制阻擋】您沒有權限（權限不足）存取管理員（ID: 3）的資料！`;
+                resultBox.innerHTML = `🛡️ 【訪問控制阻擋】您沒有權限存取管理員資料！`;
                 return;
             }
 
@@ -146,14 +149,9 @@
             }
         }
 
-        // 3. XSS 與防禦 (HTML Escape)
+        // 3. XSS 與防禦
         function escapeHtml(text) {
-            return text
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
         function renderPosts() {
@@ -177,11 +175,10 @@
             
             if (!content) return;
 
-            // 若開啟 WAF，進行 HTML 轉義防禦 XSS
             if (useWAF) {
                 content = escapeHtml(content);
             } else {
-                reportToComputer(`[警告] 觸發未過濾的 Stored XSS 攻擊內容！`);
+                reportToComputer(`[警告] 觸發未過濾的 Stored XSS！`);
             }
 
             db.posts.push({
@@ -200,21 +197,64 @@
             let useWAF = document.getElementById('enableWAF_RCE').checked;
             let resultBox = document.getElementById('rceResult');
             
-            if (useWAF) {
-                // 白名單檢查：只允許 IP 或合法網域名稱格式
-                const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
-                if (!ipRegex.test(host)) {
-                    reportToComputer(`[WAF 攔截] 阻擋非法的 RCE 參數輸入: ${host}`);
-                    resultBox.innerHTML = `🛡️ 【WAF 阻擋】指令或參數不符合白名單規則（僅允許合法 IP 格式）。`;
-                    return;
-                }
+            if (useWAF && !/^(\d{1,3}\.){3}\d{1,3}$/.test(host)) {
+                reportToComputer(`[WAF 攔截] 阻擋非法的 RCE 參數: ${host}`);
+                resultBox.innerHTML = `🛡️ 【WAF 阻擋】參數不符合合法 IP 格式白名單。`;
+                return;
             }
 
             if (host.includes("&") || host.includes("|") || host.includes(";")) {
                 resultBox.innerHTML = `PING ${host}...\n🔥 【RCE 成功】指令注入生效！`;
             } else {
-                resultBox.innerHTML = `PING ${host} (127.0.0.1) 56(84) bytes of data.\n64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.041 ms`;
+                resultBox.innerHTML = `PING ${host} (127.0.0.1) 56(84) bytes of data.\n64 bytes from 127.0.0.1: icmp_seq=1 time=0.041 ms`;
             }
+        }
+
+        // 5. 模擬前端檔案上傳與危險偵測 (New!)
+        function simulateFileUpload() {
+            let fileInput = document.getElementById('uploadFile');
+            let useScanner = document.getElementById('enableWAF_Upload').checked;
+            let resultBox = document.getElementById('uploadResult');
+
+            if (fileInput.files.length === 0) {
+                resultBox.innerHTML = "❌ 請先選擇一個要上傳的檔案！";
+                return;
+            }
+
+            let file = fileInput.files[0];
+            let fileName = file.name.toLowerCase();
+            let dangerousExts = ['.exe', '.php', '.asp', '.sh', '.bat', '.cmd'];
+
+            // 檢查副檔名防禦
+            if (useScanner) {
+                for (let ext of dangerousExts) {
+                    if (fileName.endsWith(ext)) {
+                        reportToComputer(`[資安防禦] 攔截到危險副檔名上傳: ${file.name}`);
+                        resultBox.innerHTML = `🚨 【防禦攔截】檔案副檔名 (${ext}) 屬於高危險格式，系統已拒絕上傳！`;
+                        return;
+                    }
+                }
+            }
+
+            // 讀取檔案內容進行特徵掃描
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                let content = e.target.result;
+                let dangerousSigs = ['eval(', 'child_process', 'rm -rf', 'webshell'];
+                
+                if (useScanner) {
+                    let foundSig = dangerousSigs.find(sig => content.includes(sig));
+                    if (foundSig) {
+                        reportToComputer(`[資安防禦] 偵測到惡意特徵碼 (${foundSig})！檔案已被隔離。`);
+                        resultBox.innerHTML = `🚨 【惡意檔案隔離】內容掃描發現危險特徵碼 [${foundSig}]，檔案已被自動銷毀！`;
+                        return;
+                    }
+                }
+
+                resultBox.innerHTML = `✅ 【上傳成功】檔案通過安全檢測：${file.name} (大小: ${file.size} bytes)`;
+                reportToComputer(`用戶成功上傳合法檔案: ${file.name}`);
+            };
+            reader.readAsText(file);
         }
 
         renderPosts();
